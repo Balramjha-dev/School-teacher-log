@@ -351,7 +351,7 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
                 {logs.map((log, index) => (
                     <div 
                     key={log.id} 
-                    className="relative p-[1px] bg-slate-800 hover:bg-gradient-to-r hover:from-fuchsia-500 hover:to-violet-500 rounded-2xl group transition-all duration-500 animate-in slide-in-from-bottom-4 fade-in hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(139,92,246,0.3)]"
+                    className="relative p-[1px] bg-slate-800 hover:bg-gradient-to-r hover:from-fuchsia-500 hover:to-violet-500 rounded-2xl group transition-all duration-500 animate-slide-up-fade opacity-0 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(139,92,246,0.3)]"
                     style={{ animationDelay: `${index * 100}ms` }}
                     >
                     <div className="bg-slate-950/90 p-5 rounded-[15px] hover:bg-slate-950/95 transition-all relative overflow-hidden backdrop-blur-sm h-full">

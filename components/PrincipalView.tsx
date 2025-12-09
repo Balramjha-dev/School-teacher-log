@@ -270,8 +270,17 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
               </div>
               
               <div className="relative z-10">
-                {aiSummary ? (
-                  <div className="bg-rose-950/30 p-4 border border-rose-500/30 text-sm leading-relaxed text-rose-100 font-mono shadow-inner rounded-xl">
+                {isGeneratingAi ? (
+                  <div className="bg-rose-950/20 p-4 rounded-xl border border-rose-500/20 font-mono text-xs text-rose-400 space-y-2">
+                     <p className="animate-pulse">&gt; ESTABLISHING NEURAL LINK...</p>
+                     <p className="animate-pulse delay-100">&gt; PARSING LOG DATA...</p>
+                     <p className="animate-pulse delay-200">&gt; GENERATING INSIGHTS...</p>
+                     <div className="h-1 bg-rose-900/50 rounded-full overflow-hidden mt-2">
+                       <div className="h-full bg-rose-500 animate-[width_2s_ease-in-out_infinite]" style={{width: '50%'}}></div>
+                     </div>
+                  </div>
+                ) : aiSummary ? (
+                  <div className="bg-rose-950/30 p-4 border border-rose-500/30 text-sm leading-relaxed text-rose-100 font-mono shadow-inner rounded-xl animate-slide-up-fade">
                     <p className="text-[10px] text-rose-400 mb-2 uppercase animate-pulse">&gt;&gt; Analysis Complete</p>
                     {aiSummary}
                   </div>
@@ -339,8 +348,11 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
                       </td>
                     </tr>
                   ) : (
-                    filteredLogs.map((log) => (
-                      <tr key={log.id} className="hover:bg-rose-900/10 transition-colors group">
+                    filteredLogs.map((log, index) => (
+                      <tr key={log.id} 
+                          className="hover:bg-rose-900/10 transition-colors group animate-slide-up-fade opacity-0"
+                          style={{ animationDelay: `${index * 50}ms` }}
+                      >
                         <td className="p-4 font-medium text-rose-300 font-mono text-sm">{log.teacherName}</td>
                         <td className="p-4 text-slate-500 text-xs font-mono">
                           <div className="text-slate-400">{log.period}</div>
