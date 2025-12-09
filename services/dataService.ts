@@ -68,6 +68,26 @@ export const saveLog = async (log: LogEntry): Promise<void> => {
   }
 };
 
+export const updateLog = async (log: LogEntry): Promise<void> => {
+  const { error } = await supabase
+    .from('logs')
+    .update({
+      period: log.period,
+      activity_type: log.activityType,
+      description: log.description,
+      notes: log.notes,
+      ai_feedback: log.aiFeedback,
+      // We generally update timestamp on edit to bring it to top or track last modified
+      timestamp: log.timestamp 
+    })
+    .eq('id', log.id);
+
+  if (error) {
+    console.error("Error updating log in Supabase:", error);
+    throw error;
+  }
+};
+
 export const updateLogStatus = async (logId: string, status: ApprovalStatus, feedback?: string): Promise<void> => {
   const updateData: any = { status };
   if (feedback !== undefined) updateData.feedback = feedback;

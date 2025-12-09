@@ -383,7 +383,7 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
                     <th className="p-4 font-normal text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-rose-500/10">
+                <tbody className="divide-y divide-rose-500/10" key={`${filter}-${dateFilterStart}-${dateFilterEnd}-${filteredLogs.length}`}>
                   {filteredLogs.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="p-16 text-center">

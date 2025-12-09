@@ -40,22 +40,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         {/* Action Cards */}
         <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl">
           
-          <button 
-            onClick={() => onNavigate('LOGIN')}
-            className="flex-1 group relative p-[1px] rounded-3xl transition-all duration-300 hover:scale-[1.02]"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-500"></div>
-            <div className="bg-slate-900/80 backdrop-blur-xl relative rounded-[23px] border border-white/10 p-8 h-full flex flex-col items-center gap-4 group-hover:bg-slate-900/90 transition-colors">
-              <div className="w-12 h-12 rounded-2xl bg-cyan-950/50 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
-                <LogIn className="w-6 h-6 text-cyan-400 group-hover:text-cyan-200" />
-              </div>
-              <div className="text-center">
-                <h3 className="text-lg font-bold text-white font-scifi mb-1 group-hover:text-cyan-300 transition-colors">Login</h3>
-                <p className="text-xs text-slate-400 font-medium">Access your dashboard</p>
-              </div>
-            </div>
-          </button>
-
+          {/* Register Button (Now First) */}
           <button 
             onClick={() => onNavigate('REGISTER')}
             className="flex-1 group relative p-[1px] rounded-3xl transition-all duration-300 hover:scale-[1.02]"
@@ -68,6 +53,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
               <div className="text-center">
                 <h3 className="text-lg font-bold text-white font-scifi mb-1 group-hover:text-violet-300 transition-colors">Register</h3>
                 <p className="text-xs text-slate-400 font-medium">Create a new account</p>
+              </div>
+            </div>
+          </button>
+
+          {/* Login Button (Now Second) */}
+          <button 
+            onClick={() => onNavigate('LOGIN')}
+            className="flex-1 group relative p-[1px] rounded-3xl transition-all duration-300 hover:scale-[1.02]"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-500"></div>
+            <div className="bg-slate-900/80 backdrop-blur-xl relative rounded-[23px] border border-white/10 p-8 h-full flex flex-col items-center gap-4 group-hover:bg-slate-900/90 transition-colors">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-950/50 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
+                <LogIn className="w-6 h-6 text-cyan-400 group-hover:text-cyan-200" />
+              </div>
+              <div className="text-center">
+                <h3 className="text-lg font-bold text-white font-scifi mb-1 group-hover:text-cyan-300 transition-colors">Login</h3>
+                <p className="text-xs text-slate-400 font-medium">Access your dashboard</p>
               </div>
             </div>
           </button>

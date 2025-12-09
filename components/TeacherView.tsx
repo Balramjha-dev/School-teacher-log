@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { User, LogEntry, PERIODS, ActivityType, ApprovalStatus, Role } from '../types';
-import { getLogs, saveLog } from '../services/dataService';
+import { getLogs, saveLog, updateLog } from '../services/dataService';
 import { Button } from './Button';
 import { Sidebar } from './Sidebar';
 import { ProfileModal } from './ProfileModal';
 import { generateLogFeedback } from '../services/geminiService';
-import { ClipboardList, CheckCircle, XCircle, Clock, AlertCircle, Menu, Zap, BarChart2, TrendingUp, PieChart as PieIcon, Sparkles, Filter, Calendar } from 'lucide-react';
+import { ClipboardList, CheckCircle, XCircle, Clock, AlertCircle, Menu, Zap, BarChart2, TrendingUp, PieChart as PieIcon, Sparkles, Filter, Calendar, Edit2, X } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area
 } from 'recharts';
@@ -26,6 +26,9 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Edit Mode State
+  const [editingLogId, setEditingLogId] = useState<string | null>(null);
   
   // Date Filter State
   const [dateFilterStart, setDateFilterStart] = useState('');
@@ -59,27 +62,73 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
         }
     }
 
-    const newLog: LogEntry = {
-      id: crypto.randomUUID(),
-      teacherId: user.id,
-      teacherName: user.name,
-      date: new Date().toISOString(),
-      period: selectedPeriod,
-      activityType: activity,
-      description: description,
-      status: ApprovalStatus.PENDING,
-      timestamp: Date.now(),
-      notes: notes,
-      aiFeedback: aiFeedback
-    };
+    if (editingLogId) {
+      // UPDATE EXISTING LOG
+      const updatedLog: LogEntry = {
+        id: editingLogId,
+        teacherId: user.id,
+        teacherName: user.name,
+        date: new Date().toISOString(), // Update modified date
+        period: selectedPeriod,
+        activityType: activity,
+        description: description,
+        status: ApprovalStatus.PENDING, // Ensure it remains pending if edited
+        timestamp: Date.now(),
+        notes: notes,
+        aiFeedback: aiFeedback
+      };
+      
+      await updateLog(updatedLog);
+      setLogs(prev => prev.map(l => l.id === editingLogId ? updatedLog : l).sort((a, b) => b.timestamp - a.timestamp));
+      setEditingLogId(null);
+    } else {
+      // CREATE NEW LOG
+      const newLog: LogEntry = {
+        id: crypto.randomUUID(),
+        teacherId: user.id,
+        teacherName: user.name,
+        date: new Date().toISOString(),
+        period: selectedPeriod,
+        activityType: activity,
+        description: description,
+        status: ApprovalStatus.PENDING,
+        timestamp: Date.now(),
+        notes: notes,
+        aiFeedback: aiFeedback
+      };
 
-    await saveLog(newLog);
-    setLogs(prev => [newLog, ...prev]);
+      await saveLog(newLog);
+      setLogs(prev => [newLog, ...prev]);
+    }
+
+    // Reset Form
     setDescription('');
     setNotes('');
     setShowSuccess(true);
     setIsSubmitting(false);
     setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  const startEditing = (log: LogEntry) => {
+    setEditingLogId(log.id);
+    // Find period even if format differs slightly, though it should match
+    if (PERIODS.includes(log.period)) {
+        setSelectedPeriod(log.period);
+    }
+    setActivity(log.activityType);
+    setDescription(log.description);
+    setNotes(log.notes || '');
+    
+    // Scroll to top to show form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelEditing = () => {
+    setEditingLogId(null);
+    setDescription('');
+    setNotes('');
+    setActivity(ActivityType.CLASS);
+    setSelectedPeriod(PERIODS[0]);
   };
 
   const getStatusIcon = (status: ApprovalStatus) => {
@@ -218,8 +267,238 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-6 space-y-8 relative z-10">
         
-        {/* ANALYTICS SECTION */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* SECTION 1: FORMS & LOGS (Moved to Top) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Form Section */}
+            <div className="lg:col-span-1 space-y-6">
+            <div className="p-[3px] rounded-3xl animate-gradient-warm shadow-[0_0_30px_rgba(192,38,211,0.2)]">
+                <div className="bg-slate-950/90 p-6 rounded-[21px] backdrop-blur-md h-full relative overflow-hidden">
+                {/* Background Glow inside card */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 blur-[50px] rounded-full pointer-events-none"></div>
+
+                <div className="flex items-center justify-between mb-6 pb-2 border-b border-fuchsia-500/20 relative z-10">
+                    <div className="flex items-center gap-2">
+                        <Zap className="w-5 h-5 text-fuchsia-400 animate-pulse" />
+                        <h2 className="text-lg font-bold text-fuchsia-100 font-scifi uppercase tracking-wider">
+                            {editingLogId ? 'Edit Log Entry' : 'New Activity Log'}
+                        </h2>
+                    </div>
+                    {editingLogId && (
+                         <button 
+                            onClick={cancelEditing}
+                            className="text-[10px] bg-slate-800 hover:bg-slate-700 text-fuchsia-300 px-2 py-1 rounded-lg border border-fuchsia-500/20 transition-colors"
+                         >
+                            Cancel
+                         </button>
+                    )}
+                </div>
+                
+                <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
+                    <div className="group">
+                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-fuchsia-400 group-hover:text-fuchsia-300 transition-colors">Period / Time</label>
+                    <select 
+                        className="w-full p-3 bg-slate-900/80 border border-fuchsia-500/30 text-fuchsia-100 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 outline-none appearance-none font-mono text-sm rounded-xl transition-all hover:border-fuchsia-500/60 hover:shadow-[0_0_15px_rgba(192,38,211,0.15)]"
+                        value={selectedPeriod}
+                        onChange={(e) => setSelectedPeriod(e.target.value)}
+                    >
+                        {PERIODS.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                    </div>
+
+                    <div className="group">
+                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-fuchsia-400 group-hover:text-fuchsia-300 transition-colors">Activity Type</label>
+                    <select 
+                        className="w-full p-3 bg-slate-900/80 border border-fuchsia-500/30 text-fuchsia-100 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 outline-none appearance-none font-mono text-sm rounded-xl transition-all hover:border-fuchsia-500/60 hover:shadow-[0_0_15px_rgba(192,38,211,0.15)]"
+                        value={activity}
+                        onChange={(e) => setActivity(e.target.value as ActivityType)}
+                    >
+                        {Object.values(ActivityType).map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    </div>
+
+                    <div className="group">
+                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-fuchsia-400 group-hover:text-fuchsia-300 transition-colors">
+                        {activity === ActivityType.FREE_PERIOD ? "Reason / Task Details" : "Activity Details"}
+                    </label>
+                    <textarea 
+                        className="w-full p-4 bg-slate-900/80 border border-fuchsia-500/30 text-fuchsia-100 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 outline-none h-32 resize-none font-mono text-sm placeholder:text-fuchsia-900/50 rounded-xl transition-all hover:border-fuchsia-500/60 hover:shadow-[0_0_15px_rgba(192,38,211,0.15)]"
+                        placeholder={getPlaceholder()}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        required
+                    />
+                    </div>
+                    
+                    <div className="group">
+                        <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-fuchsia-400 group-hover:text-fuchsia-300 transition-colors flex justify-between">
+                            <span>Self Reflection / Notes</span>
+                            <span className="flex items-center gap-1 text-[9px] text-fuchsia-300 bg-fuchsia-950/40 px-2 rounded-full border border-fuchsia-500/20">
+                                <Sparkles className="w-3 h-3" /> AI Analysis Enabled
+                            </span>
+                        </label>
+                        <textarea 
+                            className="w-full p-4 bg-slate-900/80 border border-fuchsia-500/30 text-fuchsia-100 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 outline-none h-24 resize-none font-mono text-sm placeholder:text-fuchsia-900/50 rounded-xl transition-all hover:border-fuchsia-500/60 hover:shadow-[0_0_15px_rgba(192,38,211,0.15)]"
+                            placeholder="What went well? What could be improved? (AI will provide feedback)"
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                        />
+                    </div>
+
+                    <Button type="submit" isLoading={isSubmitting} className="w-full shadow-[0_0_20px_rgba(192,38,211,0.25)] rounded-xl bg-gradient-to-r from-violet-600/80 to-fuchsia-600/80 text-white border-none hover:from-violet-500 hover:to-fuchsia-500 transform hover:scale-[1.02] transition-all duration-300 font-scifi tracking-widest">
+                       {editingLogId ? 'Update Log' : 'Submit Log'}
+                    </Button>
+                </form>
+                
+                {showSuccess && (
+                    <div className="mt-4 p-3 bg-fuchsia-950/40 border border-fuchsia-500/30 text-fuchsia-300 text-xs flex items-center gap-2 font-mono uppercase animate-pulse rounded-xl shadow-[0_0_10px_rgba(232,121,249,0.2)]">
+                    <CheckCircle className="w-4 h-4" /> 
+                    <span>{editingLogId ? 'Log Updated Successfully' : 'Log Submitted Successfully'}</span>
+                    </div>
+                )}
+                </div>
+            </div>
+            </div>
+
+            {/* History Section */}
+            <div className="lg:col-span-2 space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-2 border-b border-fuchsia-500/30 gap-4">
+                <h2 className="text-lg font-bold text-white font-scifi uppercase flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full animate-ping bg-fuchsia-400"></span>
+                <span className="w-2 h-2 rounded-full bg-fuchsia-400 -ml-4"></span>
+                My Logs
+                </h2>
+                
+                {/* Date Filters */}
+                <div className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-xl border border-fuchsia-500/20">
+                    <div className="flex items-center gap-1.5 px-2">
+                        <Filter className="w-3 h-3 text-fuchsia-400" />
+                        <span className="text-[10px] font-mono text-fuchsia-300 uppercase">Filter:</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <input 
+                            type="date" 
+                            value={dateFilterStart}
+                            onChange={(e) => setDateFilterStart(e.target.value)}
+                            className="bg-black border border-fuchsia-500/30 text-fuchsia-100 text-[10px] rounded-lg px-2 py-1 outline-none focus:border-fuchsia-400 font-mono"
+                        />
+                        <span className="text-fuchsia-500">-</span>
+                         <input 
+                            type="date" 
+                            value={dateFilterEnd}
+                            onChange={(e) => setDateFilterEnd(e.target.value)}
+                            className="bg-black border border-fuchsia-500/30 text-fuchsia-100 text-[10px] rounded-lg px-2 py-1 outline-none focus:border-fuchsia-400 font-mono"
+                        />
+                         {(dateFilterStart || dateFilterEnd) && (
+                            <button 
+                                onClick={() => { setDateFilterStart(''); setDateFilterEnd(''); }}
+                                className="ml-1 p-1 hover:bg-fuchsia-900/50 rounded-full text-fuchsia-400"
+                            >
+                                <XCircle className="w-3 h-3" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+            
+            {filteredLogs.length === 0 ? (
+                <div className="bg-slate-900/30 p-12 border border-fuchsia-900/30 text-center text-fuchsia-700 border-dashed rounded-3xl animate-pulse">
+                <ClipboardList className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                <p className="font-mono text-sm">No logs found for selected period.</p>
+                </div>
+            ) : (
+                <div className="space-y-4" key={`${dateFilterStart}-${dateFilterEnd}-${filteredLogs.length}`}>
+                {filteredLogs.map((log, index) => (
+                    <div 
+                    key={log.id} 
+                    className={`relative p-[1px] bg-slate-800 hover:bg-gradient-to-r hover:from-fuchsia-500 hover:to-violet-500 rounded-2xl group transition-all duration-500 animate-slide-up-fade opacity-0 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(139,92,246,0.3)] ${editingLogId === log.id ? 'ring-2 ring-fuchsia-400 scale-[1.01]' : ''}`}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                    <div className="bg-slate-950/90 p-5 rounded-[15px] hover:bg-slate-950/95 transition-all relative overflow-hidden backdrop-blur-sm h-full">
+                        {/* Status Indicator Dot */}
+                        <div className={`absolute top-4 right-4 w-2 h-2 rounded-full animate-pulse ${
+                        log.status === ApprovalStatus.APPROVED ? 'bg-fuchsia-500 shadow-[0_0_10px_#d946ef]' :
+                        log.status === ApprovalStatus.REJECTED ? 'bg-red-500 shadow-[0_0_10px_#ef4444]' :
+                        'bg-violet-500 shadow-[0_0_10px_#8b5cf6]'
+                        }`}></div>
+
+                        <div className="flex justify-between items-start mb-3">
+                        <div className="flex flex-col gap-1">
+                            <span className="font-bold text-fuchsia-100 text-sm tracking-wide font-scifi">{log.period}</span>
+                            <span className="text-[10px] text-violet-400/70 font-mono">{new Date(log.timestamp).toLocaleDateString()} // {new Date(log.timestamp).toLocaleTimeString()}</span>
+                        </div>
+                        <div className="pr-6 flex items-center gap-2">
+                             {/* EDIT BUTTON */}
+                             {log.status === ApprovalStatus.PENDING && (
+                                <button 
+                                    onClick={() => startEditing(log)}
+                                    className="p-1.5 text-fuchsia-400 hover:bg-fuchsia-900/40 rounded-lg transition-colors border border-transparent hover:border-fuchsia-500/30 group-hover/edit:opacity-100"
+                                    title="Edit Log"
+                                >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                             )}
+                            <span className={`flex items-center gap-2 text-[10px] px-3 py-1 font-bold uppercase tracking-wider rounded-full shadow-lg ${
+                            log.status === ApprovalStatus.APPROVED ? 'bg-fuchsia-950/50 text-fuchsia-300 border border-fuchsia-500/30' :
+                            log.status === ApprovalStatus.REJECTED ? 'bg-red-950/50 text-red-300 border border-red-500/30' :
+                            'bg-violet-950/50 text-violet-300 border border-violet-500/30'
+                            }`}>
+                            {getStatusIcon(log.status)}
+                            <span>{log.status}</span>
+                            </span>
+                        </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 mb-3">
+                        <span className="text-[10px] font-bold uppercase px-2 py-1 border rounded-md text-fuchsia-300 bg-fuchsia-950/30 border-fuchsia-500/20 shadow-[0_0_10px_rgba(192,38,211,0.1)]">
+                            Type: {log.activityType}
+                        </span>
+                        </div>
+                        
+                        <p className="text-slate-300 text-sm leading-relaxed font-light font-mono">
+                        {log.description}
+                        </p>
+                        
+                        {log.notes && (
+                            <div className="mt-3 pt-3 border-t border-fuchsia-500/10">
+                                <p className="text-xs text-fuchsia-300/60 font-mono mb-1 uppercase tracking-wider">Reflection Note:</p>
+                                <p className="text-slate-400 text-xs italic">"{log.notes}"</p>
+                            </div>
+                        )}
+                        
+                        {log.aiFeedback && (
+                            <div className="mt-3 p-3 bg-violet-900/20 border border-violet-500/30 rounded-xl relative overflow-hidden group-hover:bg-violet-900/30 transition-colors">
+                                <div className="absolute top-0 right-0 p-1 opacity-50">
+                                    <Sparkles className="w-3 h-3 text-violet-400" />
+                                </div>
+                                <p className="text-xs text-violet-300 font-mono mb-1 uppercase tracking-wider flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3" /> AI Insight
+                                </p>
+                                <p className="text-slate-300 text-xs leading-relaxed">{log.aiFeedback}</p>
+                            </div>
+                        )}
+                        
+                        {log.feedback && (
+                        <div className="mt-4 p-3 bg-red-950/20 border border-red-500/30 rounded-xl relative overflow-hidden">
+                            <div className="absolute inset-0 bg-red-500/5 animate-pulse"></div>
+                            <div className="relative z-10">
+                            <div className="flex items-center gap-2 text-red-400 text-xs font-bold uppercase mb-1">
+                                <AlertCircle className="w-4 h-4" />
+                                Admin Feedback:
+                            </div>
+                            <p className="text-slate-400 text-xs font-mono">{log.feedback}</p>
+                            </div>
+                        </div>
+                        )}
+                    </div>
+                    </div>
+                ))}
+                </div>
+            )}
+            </div>
+        </div>
+        
+        {/* SECTION 2: ANALYTICS (Moved to Bottom) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-fuchsia-500/10">
             {/* 1. Weekly Progress (Area) */}
             <div className="relative p-[2px] rounded-3xl animate-float">
                 <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-3xl opacity-20 blur-md"></div>
@@ -291,213 +570,6 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
-            </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Form Section */}
-            <div className="lg:col-span-1 space-y-6">
-            <div className="p-[3px] rounded-3xl animate-gradient-warm shadow-[0_0_30px_rgba(192,38,211,0.2)]">
-                <div className="bg-slate-950/90 p-6 rounded-[21px] backdrop-blur-md h-full relative overflow-hidden">
-                {/* Background Glow inside card */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 blur-[50px] rounded-full pointer-events-none"></div>
-
-                <div className="flex items-center gap-2 mb-6 pb-2 border-b border-fuchsia-500/20 relative z-10">
-                    <Zap className="w-5 h-5 text-fuchsia-400 animate-pulse" />
-                    <h2 className="text-lg font-bold text-fuchsia-100 font-scifi uppercase tracking-wider">New Activity Log</h2>
-                </div>
-                
-                <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
-                    <div className="group">
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-fuchsia-400 group-hover:text-fuchsia-300 transition-colors">Period / Time</label>
-                    <select 
-                        className="w-full p-3 bg-slate-900/80 border border-fuchsia-500/30 text-fuchsia-100 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 outline-none appearance-none font-mono text-sm rounded-xl transition-all hover:border-fuchsia-500/60 hover:shadow-[0_0_15px_rgba(192,38,211,0.15)]"
-                        value={selectedPeriod}
-                        onChange={(e) => setSelectedPeriod(e.target.value)}
-                    >
-                        {PERIODS.map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
-                    </div>
-
-                    <div className="group">
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-fuchsia-400 group-hover:text-fuchsia-300 transition-colors">Activity Type</label>
-                    <select 
-                        className="w-full p-3 bg-slate-900/80 border border-fuchsia-500/30 text-fuchsia-100 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 outline-none appearance-none font-mono text-sm rounded-xl transition-all hover:border-fuchsia-500/60 hover:shadow-[0_0_15px_rgba(192,38,211,0.15)]"
-                        value={activity}
-                        onChange={(e) => setActivity(e.target.value as ActivityType)}
-                    >
-                        {Object.values(ActivityType).map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    </div>
-
-                    <div className="group">
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-fuchsia-400 group-hover:text-fuchsia-300 transition-colors">
-                        {activity === ActivityType.FREE_PERIOD ? "Reason / Task Details" : "Activity Details"}
-                    </label>
-                    <textarea 
-                        className="w-full p-4 bg-slate-900/80 border border-fuchsia-500/30 text-fuchsia-100 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 outline-none h-32 resize-none font-mono text-sm placeholder:text-fuchsia-900/50 rounded-xl transition-all hover:border-fuchsia-500/60 hover:shadow-[0_0_15px_rgba(192,38,211,0.15)]"
-                        placeholder={getPlaceholder()}
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        required
-                    />
-                    </div>
-                    
-                    <div className="group">
-                        <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-fuchsia-400 group-hover:text-fuchsia-300 transition-colors flex justify-between">
-                            <span>Self Reflection / Notes</span>
-                            <span className="flex items-center gap-1 text-[9px] text-fuchsia-300 bg-fuchsia-950/40 px-2 rounded-full border border-fuchsia-500/20">
-                                <Sparkles className="w-3 h-3" /> AI Analysis Enabled
-                            </span>
-                        </label>
-                        <textarea 
-                            className="w-full p-4 bg-slate-900/80 border border-fuchsia-500/30 text-fuchsia-100 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 outline-none h-24 resize-none font-mono text-sm placeholder:text-fuchsia-900/50 rounded-xl transition-all hover:border-fuchsia-500/60 hover:shadow-[0_0_15px_rgba(192,38,211,0.15)]"
-                            placeholder="What went well? What could be improved? (AI will provide feedback)"
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                        />
-                    </div>
-
-                    <Button type="submit" isLoading={isSubmitting} className="w-full shadow-[0_0_20px_rgba(192,38,211,0.25)] rounded-xl bg-gradient-to-r from-violet-600/80 to-fuchsia-600/80 text-white border-none hover:from-violet-500 hover:to-fuchsia-500 transform hover:scale-[1.02] transition-all duration-300 font-scifi tracking-widest">
-                    Submit Log
-                    </Button>
-                </form>
-                
-                {showSuccess && (
-                    <div className="mt-4 p-3 bg-fuchsia-950/40 border border-fuchsia-500/30 text-fuchsia-300 text-xs flex items-center gap-2 font-mono uppercase animate-pulse rounded-xl shadow-[0_0_10px_rgba(232,121,249,0.2)]">
-                    <CheckCircle className="w-4 h-4" /> 
-                    <span>Log Submitted Successfully</span>
-                    </div>
-                )}
-                </div>
-            </div>
-            </div>
-
-            {/* History Section */}
-            <div className="lg:col-span-2 space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-2 border-b border-fuchsia-500/30 gap-4">
-                <h2 className="text-lg font-bold text-white font-scifi uppercase flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full animate-ping bg-fuchsia-400"></span>
-                <span className="w-2 h-2 rounded-full bg-fuchsia-400 -ml-4"></span>
-                My Logs
-                </h2>
-                
-                {/* Date Filters */}
-                <div className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-xl border border-fuchsia-500/20">
-                    <div className="flex items-center gap-1.5 px-2">
-                        <Filter className="w-3 h-3 text-fuchsia-400" />
-                        <span className="text-[10px] font-mono text-fuchsia-300 uppercase">Filter:</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <input 
-                            type="date" 
-                            value={dateFilterStart}
-                            onChange={(e) => setDateFilterStart(e.target.value)}
-                            className="bg-black border border-fuchsia-500/30 text-fuchsia-100 text-[10px] rounded-lg px-2 py-1 outline-none focus:border-fuchsia-400 font-mono"
-                        />
-                        <span className="text-fuchsia-500">-</span>
-                         <input 
-                            type="date" 
-                            value={dateFilterEnd}
-                            onChange={(e) => setDateFilterEnd(e.target.value)}
-                            className="bg-black border border-fuchsia-500/30 text-fuchsia-100 text-[10px] rounded-lg px-2 py-1 outline-none focus:border-fuchsia-400 font-mono"
-                        />
-                         {(dateFilterStart || dateFilterEnd) && (
-                            <button 
-                                onClick={() => { setDateFilterStart(''); setDateFilterEnd(''); }}
-                                className="ml-1 p-1 hover:bg-fuchsia-900/50 rounded-full text-fuchsia-400"
-                            >
-                                <XCircle className="w-3 h-3" />
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
-            
-            {filteredLogs.length === 0 ? (
-                <div className="bg-slate-900/30 p-12 border border-fuchsia-900/30 text-center text-fuchsia-700 border-dashed rounded-3xl animate-pulse">
-                <ClipboardList className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                <p className="font-mono text-sm">No logs found for selected period.</p>
-                </div>
-            ) : (
-                <div className="space-y-4">
-                {filteredLogs.map((log, index) => (
-                    <div 
-                    key={log.id} 
-                    className="relative p-[1px] bg-slate-800 hover:bg-gradient-to-r hover:from-fuchsia-500 hover:to-violet-500 rounded-2xl group transition-all duration-500 animate-slide-up-fade opacity-0 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(139,92,246,0.3)]"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                    <div className="bg-slate-950/90 p-5 rounded-[15px] hover:bg-slate-950/95 transition-all relative overflow-hidden backdrop-blur-sm h-full">
-                        {/* Status Indicator Dot */}
-                        <div className={`absolute top-4 right-4 w-2 h-2 rounded-full animate-pulse ${
-                        log.status === ApprovalStatus.APPROVED ? 'bg-fuchsia-500 shadow-[0_0_10px_#d946ef]' :
-                        log.status === ApprovalStatus.REJECTED ? 'bg-red-500 shadow-[0_0_10px_#ef4444]' :
-                        'bg-violet-500 shadow-[0_0_10px_#8b5cf6]'
-                        }`}></div>
-
-                        <div className="flex justify-between items-start mb-3">
-                        <div className="flex flex-col gap-1">
-                            <span className="font-bold text-fuchsia-100 text-sm tracking-wide font-scifi">{log.period}</span>
-                            <span className="text-[10px] text-violet-400/70 font-mono">{new Date(log.timestamp).toLocaleDateString()} // {new Date(log.timestamp).toLocaleTimeString()}</span>
-                        </div>
-                        <div className="pr-6">
-                            <span className={`flex items-center gap-2 text-[10px] px-3 py-1 font-bold uppercase tracking-wider rounded-full shadow-lg ${
-                            log.status === ApprovalStatus.APPROVED ? 'bg-fuchsia-950/50 text-fuchsia-300 border border-fuchsia-500/30' :
-                            log.status === ApprovalStatus.REJECTED ? 'bg-red-950/50 text-red-300 border border-red-500/30' :
-                            'bg-violet-950/50 text-violet-300 border border-violet-500/30'
-                            }`}>
-                            {getStatusIcon(log.status)}
-                            <span>{log.status}</span>
-                            </span>
-                        </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 mb-3">
-                        <span className="text-[10px] font-bold uppercase px-2 py-1 border rounded-md text-fuchsia-300 bg-fuchsia-950/30 border-fuchsia-500/20 shadow-[0_0_10px_rgba(192,38,211,0.1)]">
-                            Type: {log.activityType}
-                        </span>
-                        </div>
-                        
-                        <p className="text-slate-300 text-sm leading-relaxed font-light font-mono">
-                        {log.description}
-                        </p>
-                        
-                        {log.notes && (
-                            <div className="mt-3 pt-3 border-t border-fuchsia-500/10">
-                                <p className="text-xs text-fuchsia-300/60 font-mono mb-1 uppercase tracking-wider">Reflection Note:</p>
-                                <p className="text-slate-400 text-xs italic">"{log.notes}"</p>
-                            </div>
-                        )}
-                        
-                        {log.aiFeedback && (
-                            <div className="mt-3 p-3 bg-violet-900/20 border border-violet-500/30 rounded-xl relative overflow-hidden group-hover:bg-violet-900/30 transition-colors">
-                                <div className="absolute top-0 right-0 p-1 opacity-50">
-                                    <Sparkles className="w-3 h-3 text-violet-400" />
-                                </div>
-                                <p className="text-xs text-violet-300 font-mono mb-1 uppercase tracking-wider flex items-center gap-1">
-                                    <Sparkles className="w-3 h-3" /> AI Insight
-                                </p>
-                                <p className="text-slate-300 text-xs leading-relaxed">{log.aiFeedback}</p>
-                            </div>
-                        )}
-                        
-                        {log.feedback && (
-                        <div className="mt-4 p-3 bg-red-950/20 border border-red-500/30 rounded-xl relative overflow-hidden">
-                            <div className="absolute inset-0 bg-red-500/5 animate-pulse"></div>
-                            <div className="relative z-10">
-                            <div className="flex items-center gap-2 text-red-400 text-xs font-bold uppercase mb-1">
-                                <AlertCircle className="w-4 h-4" />
-                                Admin Feedback:
-                            </div>
-                            <p className="text-slate-400 text-xs font-mono">{log.feedback}</p>
-                            </div>
-                        </div>
-                        )}
-                    </div>
-                    </div>
-                ))}
-                </div>
-            )}
             </div>
         </div>
       </main>
