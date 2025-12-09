@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Role } from '../types';
 import { Button } from './Button';
-import { X, Save, User as UserIcon, BookOpen, Clock, Users, FileSignature } from 'lucide-react';
+import { X, Save, User as UserIcon, BookOpen, Clock, Users, FileSignature, Upload, Camera } from 'lucide-react';
 import { updateUser } from '../services/dataService';
 
 interface ProfileModalProps {
@@ -13,6 +13,7 @@ interface ProfileModalProps {
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUpdate }) => {
   const [formData, setFormData] = useState({
+    avatar: '',
     subjects: '',
     classes: '',
     experience: 0,
@@ -23,6 +24,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
   useEffect(() => {
     if (isOpen) {
       setFormData({
+        avatar: user.avatar || '',
         subjects: user.subjects || '',
         classes: user.classes || '',
         experience: user.experience || 0,
@@ -32,6 +34,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
   }, [isOpen, user]);
 
   if (!isOpen) return null;
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, avatar: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,17 +91,29 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
-            <div className="flex items-center gap-6 mb-8 p-4 bg-slate-900/50 border border-slate-800 rounded-2xl">
-                <div className={`w-20 h-20 rounded-full border-2 border-slate-800 overflow-hidden bg-black flex items-center justify-center shadow-lg`}>
-                  {user.avatar ? (
-                    <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className={`text-3xl font-bold font-scifi ${themeColor}`}>{user.name.charAt(0)}</span>
-                  )}
+            <div className="flex items-center gap-6 mb-8 p-4 bg-slate-900/50 border border-slate-800 rounded-2xl relative group-avatar">
+                <div className="relative group cursor-pointer">
+                    <div className={`w-20 h-20 rounded-full border-2 border-slate-800 overflow-hidden bg-black flex items-center justify-center shadow-lg transition-transform group-hover:scale-105`}>
+                      {formData.avatar ? (
+                        <img src={formData.avatar} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className={`text-3xl font-bold font-scifi ${themeColor}`}>{user.name.charAt(0)}</span>
+                      )}
+                    </div>
+                    {/* Overlay for upload hint */}
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera className="w-6 h-6 text-white" />
+                    </div>
+                    <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" title="Change Photo" />
                 </div>
+                
                 <div>
                   <h3 className="text-lg font-bold text-white uppercase">{user.name}</h3>
                   <p className="text-xs text-slate-500 font-mono uppercase mb-2">{user.role} // ID: {user.id.slice(0, 8)}</p>
+                  <label className={`text-[10px] font-mono uppercase cursor-pointer flex items-center gap-1 hover:text-white transition-colors ${themeColor.replace('text-', 'text-opacity-80 text-')}`}>
+                      <Upload className="w-3 h-3" /> Change Photo
+                      <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                  </label>
                 </div>
             </div>
 
