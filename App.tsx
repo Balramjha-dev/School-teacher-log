@@ -295,12 +295,13 @@ const App: React.FC = () => {
     }
   };
 
+  // Maps Role to Tailwind color name for Dynamic Classes
   const getRoleColor = (role: Role) => {
     switch(role) {
-      case Role.TEACHER: return 'emerald';
-      case Role.PRINCIPAL: return 'orange';
-      case Role.OFFICIAL: return 'green';
-      case Role.OTHER: return 'amber';
+      case Role.TEACHER: return 'fuchsia';
+      case Role.PRINCIPAL: return 'rose';
+      case Role.OFFICIAL: return 'purple';
+      case Role.OTHER: return 'violet';
     }
   };
 
@@ -395,15 +396,15 @@ const App: React.FC = () => {
 
               {resetSuccess ? (
                 <div className="space-y-6">
-                  <div className="bg-emerald-950/20 border border-emerald-500/30 p-4 rounded-xl flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-emerald-400 text-xs leading-relaxed">
+                  <div className="bg-fuchsia-950/20 border border-fuchsia-500/30 p-4 rounded-xl flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-fuchsia-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-fuchsia-400 text-xs leading-relaxed">
                       We sent you a password change link to <span className="font-bold text-white">{resetEmail}</span>.
                     </p>
                   </div>
                   <Button 
                     onClick={() => switchView('LOGIN')}
-                    className="w-full bg-emerald-900/30 border-emerald-500/50 text-emerald-400 hover:bg-emerald-800/50 rounded-xl uppercase font-scifi"
+                    className="w-full bg-fuchsia-900/30 border-fuchsia-500/50 text-fuchsia-400 hover:bg-fuchsia-800/50 rounded-xl uppercase font-scifi"
                   >
                     Log In Now
                   </Button>
@@ -472,7 +473,7 @@ const App: React.FC = () => {
               
               <div className="p-8 pt-6">
                 {loginSuccess && (
-                  <div className="mb-6 p-3 bg-green-950/30 border border-green-500/30 text-green-400 text-xs text-center uppercase tracking-wide rounded-lg">
+                  <div className="mb-6 p-3 bg-fuchsia-950/30 border border-fuchsia-500/30 text-fuchsia-400 text-xs text-center uppercase tracking-wide rounded-lg">
                     {loginSuccess}
                   </div>
                 )}
@@ -579,10 +580,10 @@ const App: React.FC = () => {
           ) : (
             /* REGISTER SCREEN */
             <div className="animate-in fade-in slide-in-from-right-8 duration-500">
-              <div className="p-6 pb-2 relative border-b border-emerald-900/30">
+              <div className="p-6 pb-2 relative border-b border-fuchsia-900/30">
                 <button 
                     onClick={() => switchView('LANDING')}
-                    className="absolute top-4 left-4 text-emerald-500/50 hover:text-emerald-500 uppercase text-[10px] font-mono"
+                    className="absolute top-4 left-4 text-fuchsia-500/50 hover:text-fuchsia-500 uppercase text-[10px] font-mono"
                 >
                   &lt; BACK
                 </button>
@@ -627,9 +628,9 @@ const App: React.FC = () => {
                   </button>
 
                   <div className="relative flex py-1 items-center">
-                    <div className="flex-grow border-t border-emerald-900/30"></div>
-                    <span className="flex-shrink-0 mx-4 text-emerald-900/50 text-[10px] uppercase font-mono">Or Register with Email</span>
-                    <div className="flex-grow border-t border-emerald-900/30"></div>
+                    <div className="flex-grow border-t border-fuchsia-900/30"></div>
+                    <span className="flex-shrink-0 mx-4 text-fuchsia-900/50 text-[10px] uppercase font-mono">Or Register with Email</span>
+                    <div className="flex-grow border-t border-fuchsia-900/30"></div>
                   </div>
 
                   <form onSubmit={handleRegister} className="space-y-3">
@@ -658,7 +659,7 @@ const App: React.FC = () => {
                         <UserIcon className="w-3 h-3 absolute left-3 top-3.5 text-slate-600" />
                         <input 
                           type="text" 
-                          className="w-full pl-9 pr-4 py-2.5 bg-black border border-slate-800 text-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-700 rounded-xl text-xs"
+                          className="w-full pl-9 pr-4 py-2.5 bg-black border border-slate-800 text-slate-200 focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 outline-none transition-all placeholder:text-slate-700 rounded-xl text-xs"
                           placeholder="Full Name"
                           value={regName}
                           onChange={(e) => setRegName(e.target.value)}
@@ -673,7 +674,7 @@ const App: React.FC = () => {
                         <Mail className="w-3 h-3 absolute left-3 top-3.5 text-slate-600" />
                         <input 
                           type="email" 
-                          className="w-full pl-9 pr-4 py-2.5 bg-black border border-slate-800 text-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-700 rounded-xl text-xs"
+                          className="w-full pl-9 pr-4 py-2.5 bg-black border border-slate-800 text-slate-200 focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 outline-none transition-all placeholder:text-slate-700 rounded-xl text-xs"
                           placeholder="email@school.edu"
                           value={regEmail}
                           onChange={(e) => setRegEmail(e.target.value)}
@@ -688,7 +689,7 @@ const App: React.FC = () => {
                         <Lock className="w-3 h-3 absolute left-3 top-3.5 text-slate-600" />
                         <input 
                           type="password" 
-                          className="w-full pl-9 pr-4 py-2.5 bg-black border border-slate-800 text-slate-200 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-700 rounded-xl text-xs"
+                          className="w-full pl-9 pr-4 py-2.5 bg-black border border-slate-800 text-slate-200 focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 outline-none transition-all placeholder:text-slate-700 rounded-xl text-xs"
                           placeholder="Password"
                           value={regPassword}
                           onChange={(e) => setRegPassword(e.target.value)}
@@ -699,14 +700,14 @@ const App: React.FC = () => {
 
                     {/* Math Captcha */}
                     <div>
-                      <label className="block text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-1">Security Check</label>
+                      <label className="block text-[10px] font-bold text-fuchsia-500 uppercase tracking-wider mb-1">Security Check</label>
                       <div className="flex gap-3">
-                        <div className="flex-none w-20 flex items-center justify-center bg-emerald-900/20 border border-emerald-900/50 rounded-xl font-mono text-emerald-400 font-bold tracking-widest text-xs">
+                        <div className="flex-none w-20 flex items-center justify-center bg-fuchsia-900/20 border border-fuchsia-900/50 rounded-xl font-mono text-fuchsia-400 font-bold tracking-widest text-xs">
                           {captchaQ} = ?
                         </div>
                         <input 
                           type="text" 
-                          className="flex-1 px-4 py-2.5 bg-black border border-emerald-900/50 text-emerald-100 focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 outline-none transition-all placeholder:text-emerald-900/50 rounded-xl text-xs"
+                          className="flex-1 px-4 py-2.5 bg-black border border-fuchsia-900/50 text-fuchsia-100 focus:ring-1 focus:ring-fuchsia-600 focus:border-fuchsia-600 outline-none transition-all placeholder:text-fuchsia-900/50 rounded-xl text-xs"
                           placeholder="Answer"
                           value={userCaptcha}
                           onChange={(e) => setUserCaptcha(e.target.value)}
@@ -721,7 +722,7 @@ const App: React.FC = () => {
                     <Button 
                       type="submit" 
                       className={`w-full mt-2 py-3 rounded-xl uppercase font-scifi ${
-                          registerRole === Role.PRINCIPAL ? 'bg-orange-900/20 border-orange-500 text-orange-400' : 'bg-emerald-900/20 border-emerald-500 text-emerald-400'
+                          registerRole === Role.PRINCIPAL ? 'bg-rose-900/20 border-rose-500 text-rose-400' : 'bg-fuchsia-900/20 border-fuchsia-500 text-fuchsia-400'
                       }`}
                       variant="outline"
                     >
@@ -735,7 +736,7 @@ const App: React.FC = () => {
                     ALREADY REGISTERED?{' '}
                     <button 
                       onClick={() => switchView('LOGIN')} 
-                      className="text-emerald-500 font-bold hover:underline uppercase"
+                      className="text-fuchsia-500 font-bold hover:underline uppercase"
                     >
                       Login
                     </button>

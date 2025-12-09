@@ -47,7 +47,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
   };
 
   const isTeacher = user.role === Role.TEACHER || user.role === Role.OFFICIAL || user.role === Role.OTHER;
-  const themeColor = isTeacher ? 'text-emerald-500' : 'text-orange-500';
+  // Fuchsia for Teacher, Rose for Principal
+  const themeColor = isTeacher ? 'text-fuchsia-500' : 'text-rose-500';
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">

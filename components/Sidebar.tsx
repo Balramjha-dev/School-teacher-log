@@ -13,10 +13,11 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout, onOpenProfile }) => {
   const isTeacher = user.role === Role.TEACHER || user.role === Role.OFFICIAL || user.role === Role.OTHER;
-  // Emerald for Teacher/Staff, Orange for Principal
-  const themeColor = isTeacher ? 'text-emerald-500' : 'text-orange-500';
-  const borderColor = isTeacher ? 'border-emerald-500/30' : 'border-orange-500/30';
-  const hoverBg = isTeacher ? 'hover:bg-emerald-900/20' : 'hover:bg-orange-900/20';
+  // Fuchsia for Teacher/Staff, Rose for Principal
+  const themeColor = isTeacher ? 'text-fuchsia-500' : 'text-rose-500';
+  const borderColor = isTeacher ? 'border-fuchsia-500/30' : 'border-rose-500/30';
+  const hoverBg = isTeacher ? 'hover:bg-fuchsia-900/20' : 'hover:bg-rose-900/20';
+  const activeColor = isTeacher ? 'group-hover:text-fuchsia-400' : 'group-hover:text-rose-400';
 
   return (
     <>
@@ -33,7 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogou
         {/* Header with Close Button */}
         <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-black/40 flex-shrink-0 rounded-tr-3xl">
           <div className="flex items-center gap-2">
-             {isTeacher ? <UserIcon className="w-5 h-5 text-emerald-500" /> : <Shield className="w-5 h-5 text-orange-500" />}
+             {isTeacher ? <UserIcon className="w-5 h-5 text-fuchsia-500" /> : <Shield className="w-5 h-5 text-rose-500" />}
              <div>
                <h2 className={`text-lg font-bold font-scifi uppercase ${themeColor}`}>Main Menu</h2>
                <p className="text-[10px] text-slate-500 font-mono tracking-widest">Navigation</p>
@@ -60,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogou
               key={idx}
               className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200 group border border-transparent hover:border-slate-800 ${hoverBg}`}
             >
-              <item.icon className={`w-5 h-5 text-slate-400 group-hover:${isTeacher ? 'text-emerald-400' : 'text-orange-400'} transition-colors`} />
+              <item.icon className={`w-5 h-5 text-slate-400 ${activeColor} transition-colors`} />
               <span className="font-scifi text-sm uppercase tracking-wider text-slate-300 group-hover:text-white">{item.label}</span>
             </button>
           ))}
@@ -72,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogou
           {/* Clickable Profile Card */}
           <div 
             onClick={onOpenProfile}
-            className={`group flex items-center gap-4 p-3 rounded-xl border border-slate-800 bg-slate-900/50 cursor-pointer transition-all hover:border-slate-600 ${isTeacher ? 'hover:shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'hover:shadow-[0_0_15px_rgba(249,115,22,0.15)]'}`}
+            className={`group flex items-center gap-4 p-3 rounded-xl border border-slate-800 bg-slate-900/50 cursor-pointer transition-all hover:border-slate-600 ${isTeacher ? 'hover:shadow-[0_0_15px_rgba(192,38,211,0.15)]' : 'hover:shadow-[0_0_15px_rgba(225,29,72,0.15)]'}`}
           >
             {/* Avatar */}
             <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${borderColor} bg-black flex items-center justify-center relative flex-shrink-0`}>
@@ -89,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogou
             
             {/* User Details */}
             <div className="flex-1 min-w-0">
-               <p className="text-sm font-bold text-white truncate group-hover:text-emerald-200 transition-colors">{user.name}</p>
+               <p className="text-sm font-bold text-white truncate group-hover:text-fuchsia-200 transition-colors">{user.name}</p>
                <p className="text-[10px] text-slate-500 truncate font-mono uppercase tracking-wider">Edit Profile</p>
             </div>
           </div>
