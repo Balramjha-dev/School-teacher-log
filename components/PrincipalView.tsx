@@ -105,18 +105,18 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
        <div className="absolute inset-0 bg-[linear-gradient(rgba(225,29,72,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(225,29,72,0.05)_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-30 pointer-events-none z-0"></div>
        <div className="absolute bottom-0 left-0 w-96 h-96 bg-red-600/20 blur-[100px] rounded-full animate-pulse"></div>
        
-      <nav className="bg-slate-900/70 backdrop-blur-xl border-b border-rose-500/30 px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-[0_4px_30px_rgba(225,29,72,0.15)] rounded-b-3xl mx-2 mt-2 animate-gradient bg-[length:200%_200%]">
+      <nav className="bg-slate-900/70 backdrop-blur-xl border-b border-rose-500/30 px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-[0_4px_30px_rgba(225,29,72,0.15)] rounded-b-3xl mx-2 mt-2 animate-gradient-warm bg-[length:200%_200%]">
         <div className="flex items-center gap-4">
            <button 
              onClick={() => setSidebarOpen(true)} 
-             className="text-rose-400 hover:text-white transition-colors p-2 hover:bg-rose-900/30 rounded-xl hover:scale-110 active:scale-95 duration-200"
+             className="text-white hover:text-white transition-colors p-2 hover:bg-rose-900/30 rounded-xl hover:scale-110 active:scale-95 duration-200"
            >
              <Menu className="w-6 h-6" />
            </button>
 
           <div>
-            <h1 className="text-xl font-bold text-white font-scifi tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-red-500 to-rose-600 drop-shadow-[0_0_5px_rgba(244,63,94,0.5)]">PRINCIPAL DASHBOARD</h1>
-            <p className="text-[10px] text-rose-400/70 font-mono uppercase">Principal: {user.name}</p>
+            <h1 className="text-xl font-bold text-white font-scifi tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-rose-200 to-white drop-shadow-[0_0_5px_rgba(244,63,94,0.5)]">PRINCIPAL DASHBOARD</h1>
+            <p className="text-[10px] text-white/70 font-mono uppercase">Principal: {user.name}</p>
           </div>
         </div>
         
@@ -144,7 +144,7 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
         
         {/* Analytics Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="relative p-[2px] rounded-3xl bg-gradient-to-br from-rose-500/40 to-red-600/40 shadow-xl col-span-1 md:col-span-2 animate-float hover:shadow-[0_0_20px_rgba(225,29,72,0.2)] transition-shadow">
+          <div className="relative p-[3px] rounded-3xl animate-gradient-warm shadow-xl col-span-1 md:col-span-2 animate-float hover:shadow-[0_0_20px_rgba(225,29,72,0.2)] transition-shadow">
             <div className="bg-slate-950/80 h-full p-6 rounded-[21px] backdrop-blur-md relative overflow-hidden group">
               <div className="flex justify-between items-center mb-6">
                   <h2 className="text-lg font-bold text-rose-400 flex items-center gap-2 font-scifi uppercase tracking-wider">
@@ -174,7 +174,7 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
             </div>
           </div>
 
-          <div className="relative p-[2px] rounded-3xl bg-gradient-to-br from-rose-500/40 to-red-600/40 shadow-xl col-span-1 animate-float hover:shadow-[0_0_20px_rgba(225,29,72,0.2)] transition-shadow" style={{ animationDelay: '1s' }}>
+          <div className="relative p-[3px] rounded-3xl animate-gradient-warm shadow-xl col-span-1 animate-float hover:shadow-[0_0_20px_rgba(225,29,72,0.2)] transition-shadow" style={{ animationDelay: '1s' }}>
             <div className="bg-gradient-to-br from-red-950/80 to-slate-950/90 h-full p-6 rounded-[21px] text-white relative overflow-hidden flex flex-col backdrop-blur-md">
               
               <div className="flex items-start justify-between mb-4 relative z-10">
@@ -211,7 +211,7 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
         </div>
 
         {/* Action Table Section */}
-        <div className="relative p-[2px] rounded-3xl bg-gradient-to-r from-rose-500/30 to-red-600/30 shadow-xl animate-in slide-in-from-bottom-8 duration-700">
+        <div className="relative p-[3px] rounded-3xl animate-gradient-warm shadow-xl animate-in slide-in-from-bottom-8 duration-700">
           <div className="bg-slate-950/80 rounded-[21px] overflow-hidden backdrop-blur-md">
             <div className="p-6 border-b border-rose-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h2 className="text-lg font-bold text-slate-200 flex items-center gap-2 font-scifi uppercase tracking-wider">

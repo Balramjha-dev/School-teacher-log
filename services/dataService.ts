@@ -148,11 +148,11 @@ export const updateUser = async (updatedUser: User): Promise<void> => {
 
 export const exportToCSV = async (): Promise<void> => {
   const logs = await getLogs();
-  const headers = ['ID', 'Date', 'Teacher', 'Period', 'Activity', 'Description', 'Status', 'Feedback'];
+  const headers = ['ID', 'Date (IST)', 'Teacher', 'Period', 'Activity', 'Description', 'Status', 'Feedback'];
   
   const rows = logs.map(log => [
     log.id,
-    new Date(log.timestamp).toLocaleDateString(),
+    new Date(log.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
     `"${log.teacherName}"`,
     `"${log.period}"`,
     `"${log.activityType}"`,

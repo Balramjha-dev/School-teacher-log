@@ -110,20 +110,20 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
       <div className="absolute inset-0 bg-[linear-gradient(rgba(192,132,252,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(192,132,252,0.05)_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-30 pointer-events-none z-0"></div>
       <div className="absolute top-0 right-0 w-96 h-96 bg-fuchsia-600/20 blur-[100px] rounded-full animate-pulse"></div>
 
-      <nav className="bg-slate-900/60 backdrop-blur-xl border-b border-fuchsia-500/30 px-6 py-4 flex justify-between items-center sticky top-0 z-50 rounded-b-3xl mx-2 mt-2 shadow-[0_4px_30px_rgba(192,38,211,0.15)] animate-gradient bg-[length:200%_200%]">
+      <nav className="bg-slate-900/60 backdrop-blur-xl border-b border-fuchsia-500/30 px-6 py-4 flex justify-between items-center sticky top-0 z-50 rounded-b-3xl mx-2 mt-2 shadow-[0_4px_30px_rgba(192,38,211,0.15)] animate-gradient-warm bg-[length:200%_200%]">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setSidebarOpen(true)} 
-            className="transition-colors p-2 hover:bg-fuchsia-900/30 rounded-xl text-fuchsia-400 hover:text-white hover:scale-110 active:scale-95 duration-200"
+            className="transition-colors p-2 hover:bg-fuchsia-900/30 rounded-xl text-white hover:text-white hover:scale-110 active:scale-95 duration-200"
           >
             <Menu className="w-6 h-6" />
           </button>
 
           <div>
-            <h1 className="text-xl font-bold text-white font-scifi tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 via-purple-400 to-violet-500 drop-shadow-[0_0_5px_rgba(232,121,249,0.5)]">
+            <h1 className="text-xl font-bold text-white font-scifi tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-fuchsia-200 to-white drop-shadow-[0_0_5px_rgba(232,121,249,0.5)]">
               {getDashboardTitle()}
             </h1>
-            <p className="text-[10px] font-mono uppercase opacity-80 text-violet-300">{user.role}: {user.name}</p>
+            <p className="text-[10px] font-mono uppercase opacity-80 text-white/70">{user.role}: {user.name}</p>
           </div>
         </div>
 
@@ -143,7 +143,7 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
       <main className="flex-1 max-w-6xl mx-auto w-full p-6 grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
         {/* Form Section */}
         <div className="lg:col-span-1 space-y-6 animate-float">
-          <div className="p-[2px] rounded-3xl bg-gradient-to-br from-fuchsia-500/50 via-purple-500/50 to-violet-600/50 shadow-[0_0_30px_rgba(192,38,211,0.2)]">
+          <div className="p-[3px] rounded-3xl animate-gradient-warm shadow-[0_0_30px_rgba(192,38,211,0.2)]">
             <div className="bg-slate-950/90 p-6 rounded-[21px] backdrop-blur-md h-full relative overflow-hidden">
                {/* Background Glow inside card */}
                <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 blur-[50px] rounded-full pointer-events-none"></div>

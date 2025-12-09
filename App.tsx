@@ -131,7 +131,12 @@ const App: React.FC = () => {
     } catch (error: any) {
       console.error("Google Sign In Error", error);
       setIsLoading(false);
-      const msg = error.message || "Google Sign-In Failed";
+      let msg = error.message || "Google Sign-In Failed";
+      
+      if (error.code === 'auth/unauthorized-domain') {
+          msg = "Domain unauthorized. Add this URL to Firebase Console > Auth > Settings > Authorized Domains.";
+      }
+      
       if (view === 'LOGIN') setLoginError(msg);
       else setRegError(msg);
     }
@@ -363,7 +368,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Main Container with Animated Gradient Border */}
-      <div className="relative p-[3px] rounded-3xl animate-gradient shadow-2xl z-10 w-full max-w-lg my-8">
+      <div className="relative p-[3px] rounded-3xl animate-gradient-warm shadow-2xl z-10 w-full max-w-lg my-8">
         
         <div className="bg-black/90 backdrop-blur-xl w-full rounded-[21px] overflow-hidden">
           
