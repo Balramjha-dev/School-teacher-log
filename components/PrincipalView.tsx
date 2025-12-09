@@ -6,10 +6,10 @@ import { Button } from './Button';
 import { Sidebar } from './Sidebar';
 import { ProfileModal } from './ProfileModal';
 import { 
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area
 } from 'recharts';
 import { 
-  Download, Check, X, FileText, Sparkles, Terminal, BarChart2, Menu, ShieldAlert
+  Download, Check, X, FileText, Sparkles, Terminal, BarChart2, Menu, ShieldAlert, TrendingUp, Users
 } from 'lucide-react';
 
 interface PrincipalViewProps {
@@ -66,19 +66,53 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
 
   const filteredLogs = filter === 'ALL' ? logs : logs.filter(l => l.status === ApprovalStatus.PENDING);
 
-  // Stats for Charts
-  const activityStats = logs.reduce((acc, log) => {
-    acc[log.activityType] = (acc[log.activityType] || 0) + 1;
+  // --- ANALYTICS DATA ---
+
+  // 1. Status Distribution (Pie Chart)
+  const statusStats = logs.reduce((acc, log) => {
+    acc[log.status] = (acc[log.status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const pieData = Object.keys(activityStats).map(key => ({
+  const statusData = Object.keys(statusStats).map(key => ({
     name: key,
-    value: activityStats[key]
+    value: statusStats[key]
   }));
 
+  // 2. Teacher Leaderboard (Bar Chart)
+  const teacherStats = logs.reduce((acc, log) => {
+    acc[log.teacherName] = (acc[log.teacherName] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  // Sort by count and take top 5
+  const teacherData = Object.keys(teacherStats)
+    .map(key => ({ name: key, count: teacherStats[key] }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
+  // 3. Activity Trend (Area Chart - Last 7 Days)
+  const getLast7Days = () => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+    }
+    return days;
+  };
+
+  const trendData = getLast7Days().map(day => {
+    const count = logs.filter(l => new Date(l.timestamp).toLocaleDateString('en-US', { weekday: 'short' }) === day).length;
+    return { name: day, count: count };
+  });
+
   // Crimson/Rose Palette
-  const COLORS = ['#be123c', '#e11d48', '#f43f5e', '#fb7185', '#fda4af'];
+  const STATUS_COLORS = {
+    [ApprovalStatus.APPROVED]: '#f43f5e', // Rose
+    [ApprovalStatus.REJECTED]: '#9f1239', // Dark Red
+    [ApprovalStatus.PENDING]: '#fbbf24',  // Amber
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative bg-slate-950 animate-boot overflow-x-hidden selection:bg-rose-600 selection:text-white">
@@ -142,63 +176,114 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
 
       <main className="flex-1 p-6 max-w-[1400px] mx-auto w-full space-y-6 relative z-10">
         
-        {/* Analytics Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="relative p-[3px] rounded-3xl animate-gradient-warm shadow-xl col-span-1 md:col-span-2 animate-float hover:shadow-[0_0_20px_rgba(225,29,72,0.2)] transition-shadow">
-            <div className="bg-slate-950/80 h-full p-6 rounded-[21px] backdrop-blur-md relative overflow-hidden group">
-              <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-lg font-bold text-rose-400 flex items-center gap-2 font-scifi uppercase tracking-wider">
-                    <BarChart2 className="w-5 h-5" />
-                    Activity Overview
-                  </h2>
-              </div>
-              <div className="h-64 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={pieData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} opacity={0.3} />
-                      <XAxis dataKey="name" tick={{fontSize: 10, fill: '#fda4af'}} stroke="#881337" />
-                      <YAxis allowDecimals={false} tick={{fill: '#fda4af'}} stroke="#881337" />
-                      <Tooltip 
-                        contentStyle={{backgroundColor: '#1e293b', borderColor: '#e11d48', color: '#fff1f2', borderRadius: '12px', boxShadow: '0 0 10px rgba(225,29,72,0.3)'}}
-                        itemStyle={{color: '#fb7185'}}
-                        cursor={{fill: 'rgba(225,29,72,0.1)'}}
-                      />
-                      <Bar dataKey="value" fill="#e11d48" radius={[6, 6, 0, 0]}>
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-              </div>
+        {/* ANALYTICS SECTION */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {/* 1. Status Distribution (Pie) */}
+            <div className="relative p-[2px] rounded-3xl animate-float md:col-span-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-rose-600 to-red-900 rounded-3xl opacity-20 blur-md"></div>
+                <div className="bg-slate-950/80 p-5 rounded-[22px] backdrop-blur-md h-72 border border-rose-500/20 relative overflow-hidden flex flex-col">
+                    <h3 className="text-rose-300 font-scifi uppercase text-xs mb-2 flex items-center gap-2">
+                        <ShieldAlert className="w-4 h-4" /> Log Status
+                    </h3>
+                    <div className="flex-1">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={statusData}
+                                    innerRadius={40}
+                                    outerRadius={60}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {statusData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name as ApprovalStatus] || '#8884d8'} stroke="rgba(0,0,0,0.5)" />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={{backgroundColor: '#0f172a', borderColor: '#e11d48', color: '#fff'}} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
             </div>
-          </div>
 
-          <div className="relative p-[3px] rounded-3xl animate-gradient-warm shadow-xl col-span-1 animate-float hover:shadow-[0_0_20px_rgba(225,29,72,0.2)] transition-shadow" style={{ animationDelay: '1s' }}>
-            <div className="bg-gradient-to-br from-red-950/80 to-slate-950/90 h-full p-6 rounded-[21px] text-white relative overflow-hidden flex flex-col backdrop-blur-md">
-              
+            {/* 2. School Trend (Area) */}
+             <div className="relative p-[2px] rounded-3xl animate-float md:col-span-2" style={{ animationDelay: '0.5s' }}>
+                <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-rose-600 rounded-3xl opacity-20 blur-md"></div>
+                <div className="bg-slate-950/80 p-5 rounded-[22px] backdrop-blur-md h-72 border border-rose-500/20 relative overflow-hidden flex flex-col">
+                    <h3 className="text-rose-300 font-scifi uppercase text-xs mb-4 flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4" /> School Activity Trend
+                    </h3>
+                    <div className="flex-1">
+                         <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={trendData}>
+                                <defs>
+                                    <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#e11d48" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="#e11d48" stopOpacity={0}/>
+                                    </linearGradient>
+                                </defs>
+                                <XAxis dataKey="name" tick={{fontSize: 10, fill: '#fb7185'}} stroke="#881337" />
+                                <Tooltip 
+                                    contentStyle={{backgroundColor: '#0f172a', borderColor: '#e11d48', color: '#fff'}}
+                                    itemStyle={{color: '#fb7185'}} 
+                                />
+                                <Area type="monotone" dataKey="count" stroke="#e11d48" fillOpacity={1} fill="url(#colorTrend)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+
+             {/* 3. Leaderboard (Bar) */}
+            <div className="relative p-[2px] rounded-3xl animate-float md:col-span-1" style={{ animationDelay: '1s' }}>
+                <div className="absolute inset-0 bg-gradient-to-bl from-rose-600 to-orange-600 rounded-3xl opacity-20 blur-md"></div>
+                 <div className="bg-slate-950/80 p-5 rounded-[22px] backdrop-blur-md h-72 border border-rose-500/20 relative overflow-hidden flex flex-col">
+                    <h3 className="text-rose-300 font-scifi uppercase text-xs mb-4 flex items-center gap-2">
+                        <Users className="w-4 h-4" /> Top Staff
+                    </h3>
+                    <div className="flex-1">
+                         <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={teacherData} layout="vertical">
+                                <XAxis type="number" hide />
+                                <YAxis dataKey="name" type="category" width={80} tick={{fontSize: 9, fill: '#fb7185'}} stroke="#881337" />
+                                <Tooltip 
+                                    cursor={{fill: 'rgba(225, 29, 72, 0.1)'}}
+                                    contentStyle={{backgroundColor: '#0f172a', borderColor: '#e11d48', color: '#fff'}}
+                                />
+                                <Bar dataKey="count" fill="#e11d48" radius={[0, 4, 4, 0]} barSize={20} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {/* AI Summary Section */}
+        <div className="relative p-[2px] rounded-3xl animate-float w-full" style={{ animationDelay: '1.5s' }}>
+             <div className="bg-gradient-to-br from-red-950/80 to-slate-950/90 p-6 rounded-[21px] text-white relative overflow-hidden flex flex-col backdrop-blur-md border border-rose-500/30">
               <div className="flex items-start justify-between mb-4 relative z-10">
                 <h2 className="text-lg font-bold flex items-center gap-2 font-scifi uppercase text-rose-300 tracking-wider">
                   <Sparkles className="w-5 h-5 text-rose-400 animate-spin-slow" />
-                  AI Summary
+                  AI Executive Summary
                 </h2>
+                {aiSummary && <span className="text-[10px] bg-rose-900/50 px-2 py-1 rounded text-rose-300 border border-rose-500/30 animate-pulse">UPDATED</span>}
               </div>
               
-              <div className="relative z-10 flex-1 flex flex-col">
+              <div className="relative z-10">
                 {aiSummary ? (
-                  <div className="bg-rose-950/30 p-4 border border-rose-500/30 text-sm leading-relaxed text-rose-100 font-mono shadow-inner h-full overflow-y-auto rounded-xl scrollbar-thin scrollbar-thumb-rose-600">
-                    <p className="text-[10px] text-rose-400 mb-2 uppercase animate-pulse">&gt;&gt; Summary Generated</p>
+                  <div className="bg-rose-950/30 p-4 border border-rose-500/30 text-sm leading-relaxed text-rose-100 font-mono shadow-inner rounded-xl">
+                    <p className="text-[10px] text-rose-400 mb-2 uppercase animate-pulse">&gt;&gt; Analysis Complete</p>
                     {aiSummary}
                   </div>
                 ) : (
-                  <div className="text-center py-8 flex-1 flex flex-col justify-center">
-                    <p className="text-rose-200/60 text-xs font-mono mb-6 uppercase tracking-wide">
-                      No summary generated yet.
+                  <div className="text-center py-4">
+                    <p className="text-rose-200/60 text-xs font-mono mb-4 uppercase tracking-wide">
+                      Generate a smart summary of today's activities.
                     </p>
                     <Button 
                         onClick={handleGenerateSummary} 
                         isLoading={isGeneratingAi}
-                        className="w-full border-rose-400/50 text-rose-300 hover:bg-rose-900/50 hover:shadow-[0_0_15px_rgba(225,29,72,0.4)] rounded-xl font-scifi uppercase tracking-widest"
+                        className="border-rose-400/50 text-rose-300 hover:bg-rose-900/50 hover:shadow-[0_0_15px_rgba(225,29,72,0.4)] rounded-xl font-scifi uppercase tracking-widest px-8"
                         variant="outline"
                       >
                         Generate Summary
@@ -207,7 +292,6 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
                 )}
               </div>
             </div>
-          </div>
         </div>
 
         {/* Action Table Section */}
