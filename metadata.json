@@ -1,0 +1,5 @@
+{
+  "name": "EduLog - School Management System",
+  "description": "A streamlined interface for teachers to log daily class activities and for principals to approve workflows. Features AI-powered daily summaries and CSV export.",
+  "requestFramePermissions": []
+}
