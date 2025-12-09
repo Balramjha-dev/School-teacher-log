@@ -329,8 +329,8 @@ const App: React.FC = () => {
              <div className="h-full bg-red-600 w-1/2 animate-[spin_1s_linear_infinite_reverse]" style={{ width: '100%', transformOrigin: '0% 50%' }}></div>
           </div>
           <div className="font-mono text-[10px] text-red-500/70 space-y-1">
-             <p>>> SECURE CONNECTION...</p>
-             <p className="delay-100">>> REDIRECTING...</p>
+             <p>&gt;&gt; SECURE CONNECTION...</p>
+             <p className="delay-100">&gt;&gt; REDIRECTING...</p>
           </div>
         </div>
       </div>

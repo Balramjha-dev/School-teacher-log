@@ -186,7 +186,7 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
               <div className="relative z-10 flex-1 flex flex-col">
                 {aiSummary ? (
                   <div className="bg-orange-950/40 p-4 border border-orange-500/30 text-sm leading-relaxed text-orange-100 font-mono shadow-inner h-full overflow-y-auto rounded-xl">
-                    <p className="text-[10px] text-orange-400 mb-2 uppercase">>> Summary Generated</p>
+                    <p className="text-[10px] text-orange-400 mb-2 uppercase">&gt;&gt; Summary Generated</p>
                     {aiSummary}
                   </div>
                 ) : (
