@@ -43,6 +43,8 @@ export interface LogEntry {
   status: ApprovalStatus;
   feedback?: string;
   timestamp: number;
+  notes?: string;
+  aiFeedback?: string;
 }
 
 export const PERIODS = [

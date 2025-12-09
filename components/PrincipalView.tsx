@@ -9,7 +9,7 @@ import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area
 } from 'recharts';
 import { 
-  Download, Check, X, FileText, Sparkles, Terminal, BarChart2, Menu, ShieldAlert, TrendingUp, Users
+  Download, Check, X, FileText, Sparkles, Terminal, BarChart2, Menu, ShieldAlert, TrendingUp, Users, Filter, XCircle, Calendar
 } from 'lucide-react';
 
 interface PrincipalViewProps {
@@ -26,6 +26,10 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Date Filter State
+  const [dateFilterStart, setDateFilterStart] = useState('');
+  const [dateFilterEnd, setDateFilterEnd] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -64,7 +68,13 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
       await exportToCSV();
   }
 
-  const filteredLogs = filter === 'ALL' ? logs : logs.filter(l => l.status === ApprovalStatus.PENDING);
+  // Filter logs based on Status AND Date Range
+  const filteredLogs = (filter === 'ALL' ? logs : logs.filter(l => l.status === ApprovalStatus.PENDING)).filter(log => {
+      const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+      if (dateFilterStart && logDate < dateFilterStart) return false;
+      if (dateFilterEnd && logDate > dateFilterEnd) return false;
+      return true;
+  });
 
   // --- ANALYTICS DATA ---
 
@@ -306,25 +316,58 @@ export const PrincipalView: React.FC<PrincipalViewProps> = ({ user: initialUser,
         {/* Action Table Section */}
         <div className="relative p-[3px] rounded-3xl animate-gradient-warm shadow-xl animate-in slide-in-from-bottom-8 duration-700">
           <div className="bg-slate-950/80 rounded-[21px] overflow-hidden backdrop-blur-md">
-            <div className="p-6 border-b border-rose-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-6 border-b border-rose-500/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-lg font-bold text-slate-200 flex items-center gap-2 font-scifi uppercase tracking-wider">
                 <FileText className="w-5 h-5 text-rose-500" />
                 Staff Logs
               </h2>
               
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => setFilter('ALL')}
-                  className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all border rounded-xl ${filter === 'ALL' ? 'bg-rose-950/60 text-rose-400 border-rose-500/50 shadow-[0_0_10px_rgba(225,29,72,0.3)]' : 'bg-transparent text-slate-500 border-slate-700 hover:border-slate-500'}`}
-                >
-                  All Logs
-                </button>
-                <button 
-                  onClick={() => setFilter('PENDING')}
-                  className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all border rounded-xl ${filter === 'PENDING' ? 'bg-amber-950/60 text-amber-400 border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.3)]' : 'bg-transparent text-slate-500 border-slate-700 hover:border-slate-500'}`}
-                >
-                  Pending Approval
-                </button>
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                 {/* Date Filters */}
+                <div className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-xl border border-rose-500/20">
+                    <div className="flex items-center gap-1.5 px-2">
+                        <Filter className="w-3 h-3 text-rose-400" />
+                        <span className="text-[10px] font-mono text-rose-300 uppercase hidden lg:inline">Filter:</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <input 
+                            type="date" 
+                            value={dateFilterStart}
+                            onChange={(e) => setDateFilterStart(e.target.value)}
+                            className="bg-black border border-rose-500/30 text-rose-100 text-[10px] rounded-lg px-2 py-1 outline-none focus:border-rose-400 font-mono w-24"
+                        />
+                        <span className="text-rose-500">-</span>
+                         <input 
+                            type="date" 
+                            value={dateFilterEnd}
+                            onChange={(e) => setDateFilterEnd(e.target.value)}
+                            className="bg-black border border-rose-500/30 text-rose-100 text-[10px] rounded-lg px-2 py-1 outline-none focus:border-rose-400 font-mono w-24"
+                        />
+                        {(dateFilterStart || dateFilterEnd) && (
+                            <button 
+                                onClick={() => { setDateFilterStart(''); setDateFilterEnd(''); }}
+                                className="ml-1 p-1 hover:bg-rose-900/50 rounded-full text-rose-400"
+                            >
+                                <XCircle className="w-3 h-3" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                <div className="flex gap-2">
+                    <button 
+                    onClick={() => setFilter('ALL')}
+                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all border rounded-xl ${filter === 'ALL' ? 'bg-rose-950/60 text-rose-400 border-rose-500/50 shadow-[0_0_10px_rgba(225,29,72,0.3)]' : 'bg-transparent text-slate-500 border-slate-700 hover:border-slate-500'}`}
+                    >
+                    All Logs
+                    </button>
+                    <button 
+                    onClick={() => setFilter('PENDING')}
+                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all border rounded-xl ${filter === 'PENDING' ? 'bg-amber-950/60 text-amber-400 border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.3)]' : 'bg-transparent text-slate-500 border-slate-700 hover:border-slate-500'}`}
+                    >
+                    Pending
+                    </button>
+                </div>
               </div>
             </div>
 

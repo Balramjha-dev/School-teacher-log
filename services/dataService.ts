@@ -12,7 +12,9 @@ const mapLogFromDB = (data: any): LogEntry => ({
   description: data.description,
   status: data.status,
   feedback: data.feedback,
-  timestamp: Number(data.timestamp)
+  timestamp: Number(data.timestamp),
+  notes: data.notes,
+  aiFeedback: data.ai_feedback
 });
 
 // Map LogEntry to Supabase 'logs' table row
@@ -26,7 +28,9 @@ const mapLogToDB = (log: LogEntry) => ({
   description: log.description,
   status: log.status,
   feedback: log.feedback,
-  timestamp: log.timestamp
+  timestamp: log.timestamp,
+  notes: log.notes,
+  ai_feedback: log.aiFeedback
 });
 
 // Map Supabase 'users' table rows to User
@@ -148,7 +152,7 @@ export const updateUser = async (updatedUser: User): Promise<void> => {
 
 export const exportToCSV = async (): Promise<void> => {
   const logs = await getLogs();
-  const headers = ['ID', 'Date (IST)', 'Teacher', 'Period', 'Activity', 'Description', 'Status', 'Feedback'];
+  const headers = ['ID', 'Date (IST)', 'Teacher', 'Period', 'Activity', 'Description', 'Status', 'Feedback', 'Notes', 'AI Feedback'];
   
   const rows = logs.map(log => [
     log.id,
@@ -158,7 +162,9 @@ export const exportToCSV = async (): Promise<void> => {
     `"${log.activityType}"`,
     `"${log.description.replace(/"/g, '""')}"`,
     log.status,
-    `"${(log.feedback || '').replace(/"/g, '""')}"`
+    `"${(log.feedback || '').replace(/"/g, '""')}"`,
+    `"${(log.notes || '').replace(/"/g, '""')}"`,
+    `"${(log.aiFeedback || '').replace(/"/g, '""')}"`
   ]);
 
   const csvContent = [

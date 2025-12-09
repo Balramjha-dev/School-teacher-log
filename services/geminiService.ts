@@ -46,3 +46,34 @@ export const generateDailySummary = async (logs: LogEntry[]): Promise<string> =>
     return "Error connecting to AI service.";
   }
 };
+
+export const generateLogFeedback = async (activity: string, description: string, notes: string): Promise<string> => {
+  const apiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : null;
+
+  if (!apiKey) {
+    return "API Key missing. AI feedback unavailable.";
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: `
+        You are a helpful teaching assistant coach.
+        A teacher has logged an activity:
+        Activity Type: ${activity}
+        Description: ${description}
+        Self Reflection/Notes: ${notes}
+
+        Provide a brief, encouraging, and constructive feedback (max 2 sentences) based on their reflection.
+        Focus on professional growth or well-being.
+      `,
+    });
+
+    return response.text || "No feedback generated.";
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    return "AI service unavailable.";
+  }
+};

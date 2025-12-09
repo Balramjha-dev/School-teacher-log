@@ -4,7 +4,8 @@ import { getLogs, saveLog } from '../services/dataService';
 import { Button } from './Button';
 import { Sidebar } from './Sidebar';
 import { ProfileModal } from './ProfileModal';
-import { ClipboardList, CheckCircle, XCircle, Clock, AlertCircle, Menu, Zap, BarChart2, TrendingUp, PieChart as PieIcon } from 'lucide-react';
+import { generateLogFeedback } from '../services/geminiService';
+import { ClipboardList, CheckCircle, XCircle, Clock, AlertCircle, Menu, Zap, BarChart2, TrendingUp, PieChart as PieIcon, Sparkles, Filter, Calendar } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area
 } from 'recharts';
@@ -20,10 +21,15 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
   const [selectedPeriod, setSelectedPeriod] = useState(PERIODS[0]);
   const [activity, setActivity] = useState<ActivityType>(ActivityType.CLASS);
   const [description, setDescription] = useState('');
+  const [notes, setNotes] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Date Filter State
+  const [dateFilterStart, setDateFilterStart] = useState('');
+  const [dateFilterEnd, setDateFilterEnd] = useState('');
 
   useEffect(() => {
     // Load logs for this teacher asynchronously
@@ -42,6 +48,17 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    // Generate AI Feedback if notes provided
+    let aiFeedback = undefined;
+    if (notes.trim().length > 10) {
+        try {
+            aiFeedback = await generateLogFeedback(activity, description, notes);
+        } catch (err) {
+            console.warn("AI Feedback generation failed", err);
+        }
+    }
+
     const newLog: LogEntry = {
       id: crypto.randomUUID(),
       teacherId: user.id,
@@ -51,12 +68,15 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
       activityType: activity,
       description: description,
       status: ApprovalStatus.PENDING,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      notes: notes,
+      aiFeedback: aiFeedback
     };
 
     await saveLog(newLog);
     setLogs(prev => [newLog, ...prev]);
     setDescription('');
+    setNotes('');
     setShowSuccess(true);
     setIsSubmitting(false);
     setTimeout(() => setShowSuccess(false), 3000);
@@ -132,6 +152,14 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
   }));
 
   const PIE_COLORS = ['#d946ef', '#a855f7', '#8b5cf6', '#6366f1', '#ec4899'];
+
+  // Filter logs based on date range
+  const filteredLogs = logs.filter(log => {
+    const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+    if (dateFilterStart && logDate < dateFilterStart) return false;
+    if (dateFilterEnd && logDate > dateFilterEnd) return false;
+    return true;
+  });
 
   return (
     <div className="min-h-screen flex flex-col relative bg-slate-950 animate-boot overflow-x-hidden selection:bg-fuchsia-500 selection:text-white">
@@ -314,6 +342,21 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
                         required
                     />
                     </div>
+                    
+                    <div className="group">
+                        <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-fuchsia-400 group-hover:text-fuchsia-300 transition-colors flex justify-between">
+                            <span>Self Reflection / Notes</span>
+                            <span className="flex items-center gap-1 text-[9px] text-fuchsia-300 bg-fuchsia-950/40 px-2 rounded-full border border-fuchsia-500/20">
+                                <Sparkles className="w-3 h-3" /> AI Analysis Enabled
+                            </span>
+                        </label>
+                        <textarea 
+                            className="w-full p-4 bg-slate-900/80 border border-fuchsia-500/30 text-fuchsia-100 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 outline-none h-24 resize-none font-mono text-sm placeholder:text-fuchsia-900/50 rounded-xl transition-all hover:border-fuchsia-500/60 hover:shadow-[0_0_15px_rgba(192,38,211,0.15)]"
+                            placeholder="What went well? What could be improved? (AI will provide feedback)"
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                        />
+                    </div>
 
                     <Button type="submit" isLoading={isSubmitting} className="w-full shadow-[0_0_20px_rgba(192,38,211,0.25)] rounded-xl bg-gradient-to-r from-violet-600/80 to-fuchsia-600/80 text-white border-none hover:from-violet-500 hover:to-fuchsia-500 transform hover:scale-[1.02] transition-all duration-300 font-scifi tracking-widest">
                     Submit Log
@@ -332,23 +375,53 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
 
             {/* History Section */}
             <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-fuchsia-500/30">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-2 border-b border-fuchsia-500/30 gap-4">
                 <h2 className="text-lg font-bold text-white font-scifi uppercase flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full animate-ping bg-fuchsia-400"></span>
                 <span className="w-2 h-2 rounded-full bg-fuchsia-400 -ml-4"></span>
                 My Logs
                 </h2>
-                <div className="text-[10px] text-violet-400 font-mono uppercase tracking-widest">Live Sync Active</div>
+                
+                {/* Date Filters */}
+                <div className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-xl border border-fuchsia-500/20">
+                    <div className="flex items-center gap-1.5 px-2">
+                        <Filter className="w-3 h-3 text-fuchsia-400" />
+                        <span className="text-[10px] font-mono text-fuchsia-300 uppercase">Filter:</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <input 
+                            type="date" 
+                            value={dateFilterStart}
+                            onChange={(e) => setDateFilterStart(e.target.value)}
+                            className="bg-black border border-fuchsia-500/30 text-fuchsia-100 text-[10px] rounded-lg px-2 py-1 outline-none focus:border-fuchsia-400 font-mono"
+                        />
+                        <span className="text-fuchsia-500">-</span>
+                         <input 
+                            type="date" 
+                            value={dateFilterEnd}
+                            onChange={(e) => setDateFilterEnd(e.target.value)}
+                            className="bg-black border border-fuchsia-500/30 text-fuchsia-100 text-[10px] rounded-lg px-2 py-1 outline-none focus:border-fuchsia-400 font-mono"
+                        />
+                         {(dateFilterStart || dateFilterEnd) && (
+                            <button 
+                                onClick={() => { setDateFilterStart(''); setDateFilterEnd(''); }}
+                                className="ml-1 p-1 hover:bg-fuchsia-900/50 rounded-full text-fuchsia-400"
+                            >
+                                <XCircle className="w-3 h-3" />
+                            </button>
+                        )}
+                    </div>
+                </div>
             </div>
             
-            {logs.length === 0 ? (
+            {filteredLogs.length === 0 ? (
                 <div className="bg-slate-900/30 p-12 border border-fuchsia-900/30 text-center text-fuchsia-700 border-dashed rounded-3xl animate-pulse">
                 <ClipboardList className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                <p className="font-mono text-sm">No logs found. Initialize first entry.</p>
+                <p className="font-mono text-sm">No logs found for selected period.</p>
                 </div>
             ) : (
                 <div className="space-y-4">
-                {logs.map((log, index) => (
+                {filteredLogs.map((log, index) => (
                     <div 
                     key={log.id} 
                     className="relative p-[1px] bg-slate-800 hover:bg-gradient-to-r hover:from-fuchsia-500 hover:to-violet-500 rounded-2xl group transition-all duration-500 animate-slide-up-fade opacity-0 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(139,92,246,0.3)]"
@@ -388,6 +461,25 @@ export const TeacherView: React.FC<TeacherViewProps> = ({ user: initialUser, onL
                         <p className="text-slate-300 text-sm leading-relaxed font-light font-mono">
                         {log.description}
                         </p>
+                        
+                        {log.notes && (
+                            <div className="mt-3 pt-3 border-t border-fuchsia-500/10">
+                                <p className="text-xs text-fuchsia-300/60 font-mono mb-1 uppercase tracking-wider">Reflection Note:</p>
+                                <p className="text-slate-400 text-xs italic">"{log.notes}"</p>
+                            </div>
+                        )}
+                        
+                        {log.aiFeedback && (
+                            <div className="mt-3 p-3 bg-violet-900/20 border border-violet-500/30 rounded-xl relative overflow-hidden group-hover:bg-violet-900/30 transition-colors">
+                                <div className="absolute top-0 right-0 p-1 opacity-50">
+                                    <Sparkles className="w-3 h-3 text-violet-400" />
+                                </div>
+                                <p className="text-xs text-violet-300 font-mono mb-1 uppercase tracking-wider flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3" /> AI Insight
+                                </p>
+                                <p className="text-slate-300 text-xs leading-relaxed">{log.aiFeedback}</p>
+                            </div>
+                        )}
                         
                         {log.feedback && (
                         <div className="mt-4 p-3 bg-red-950/20 border border-red-500/30 rounded-xl relative overflow-hidden">
